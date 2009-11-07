@@ -1,0 +1,6 @@
+@author Tamas Nagy <tamas@erlang-consulting.com>
+@doc An Erlang Bittorrent Client.
+
+Currently only does bencode encode and decode.
+
+@end

@@ -1,0 +1,15 @@
+Dependencies:
+ * Erlang/OTP R13-B or newer (compiler to build, kernel and stdlib to run)
+ * GNU Make (might actually build with some other make as well)
+ * Eunit (for testing)
+
+To build the application simply run 'make'. This should build .beam, .app
+files and documentation.
+
+Configuration: (environment variables)
+ * Not yet
+
+Development:
+There are some interesting make targets:
+ * test - Will compile and run all tests (using eunit)
+ * dialyzer - Will run dialyzer on the application
