@@ -32,7 +32,7 @@
 -type b_data() :: b_dict() | b_list() | b_integer() | b_string().
 
 -type erstring() :: binary().
--type erdict() :: [{erstring(), erdict() | list() | integer() | erstring()}].
+-type erdict() :: [{erstring(), list() | integer() | erstring()}].
 
 -type data() :: erdict() | list() | integer() | erstring().
 
