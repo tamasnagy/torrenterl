@@ -32,7 +32,20 @@
 
 -export([decode/1, encode/1]).
 
+-export([decode_file/1]).
+
 -include("torrenterl_types.hrl").
+
+%% @spec (Path) -> Data
+%%   Path = string()
+%%   Data = binary | integer() | list()
+%% @doc Decodes bencoded file.
+%% Reads up file content and calls {@link decode/1} on it.
+%% @end
+-spec decode_file(string()) -> data().
+decode_file(File) ->
+    {ok, Bin} = file:read_file(File),
+    decode(Bin).
 
 %% @spec (BencBin) -> Data 
 %%   BencBin = binary()
