@@ -119,8 +119,8 @@ send_announce(Torrent = #torrent{announce= Announce}, TorrentStats, Params) ->
     
 -spec to_announce_params(record()) -> list(tuple()).
 to_announce_params(#torrent{infohash= InfoHash, peerid= PeerId}) ->
-    [{<<"info_hash">>, list_to_binary(edoc_lib:escape_uri(
-     binary_to_list(InfoHash)))},
+    [{<<"info_hash">>, list_to_binary(escape_uri(
+     binary_to_list(InfoHash), []))},
      {<<"peer_id">>, PeerId}];
 to_announce_params(#torrent_stats{
  uploaded= Up, downloaded= Down, left= Left}) ->
@@ -134,4 +134,24 @@ create_get_param_list(List) ->
 
 gen_peer_id() ->
     list_to_binary([<<"-ER0001-">>, 
-     list_to_binary(io_lib:format("~.12.0w",[random:uniform(999999999999)]))]).
+     io_lib:format(
+      "~2.16.0B~2.16.0B~2.16.0B~2.16.0B~2.16.0B~2.16.0B", 
+      binary_to_list(crypto:rand_bytes(6)))]).
+
+
+escape_uri([], Acc) ->
+    lists:reverse(Acc);
+escape_uri([Char | Rest], Acc)
+ when Char >= $a, Char =< $z ->
+    escape_uri(Rest, [Char | Acc]);
+escape_uri([Char | Rest], Acc)
+ when Char >= $A, Char =< $Z ->
+    escape_uri(Rest, [Char | Acc]);
+escape_uri([Char | Rest], Acc)
+ when Char >= $0, Char =< $9 ->
+    escape_uri(Rest, [Char | Acc]);
+escape_uri([Char | Rest], Acc)
+ when Char == $.; Char == $-; Char == $_; Char == $~ ->
+    escape_uri(Rest, [Char | Acc]);
+escape_uri([Char | Rest], Acc) ->
+    escape_uri(Rest, [io_lib:format("%~2.16.0B", [Char]) | Acc]).
