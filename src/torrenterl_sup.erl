@@ -25,13 +25,49 @@
 %%% ----------------------------------------------------------------------------
 
 %%% @author Tamas Nagy <tamas@erlang-consulting.com>
-%%% @doc This is the specification for the torrenterl application.
+%%% @doc Module implementing top level supervisor for torrenterl 
+%%% See {@link download/1} function.
 %%% @end
-{application, torrenterl,
-    [{description, "Erlang Bittorrent Client"},
-        {vsn, "@VSN@"},
-        {modules, [@MODULES@]},
-        {mod, {torrenterl, []}},
-        {applications, [kernel, stdlib, mnesia, ssl, crypto, lhttpc]}
- ]}.
+-module(torrenterl_sup).
+-behaviour(supervisor).
 
+%%API
+-export([start_link/0, start_torrent_manager/1]).
+%%Callback
+-export([init/1]).
+
+-type child() :: {atom(), {atom(), atom(), list(any)},
+    atom(), integer(), atom(), list(atom())}.
+
+%% @spec () -> {ok, pid()} | {error, Reason}
+%% Reason = atom()
+%% @doc Starts and links to the supervisor.
+%% This is normally called from an application behaviour or from another
+%% supervisor.
+%% @end
+-spec start_link() -> {ok, pid()} | {error, atom()}.
+start_link() ->
+    io:format("Loading torrent information...", []),
+    torrent_db:ensure_loaded([torrent, torrent_stats, torrent_config]),
+    io:format("Done.~n", []),
+    supervisor:start_link(?MODULE, torrent_db:list_torrents()).
+
+%%TODO: return type
+-spec start_torrent_manager(binary()) -> any().
+start_torrent_manager(Hash) -> 
+    Manager = {{torrent_manager, Hash}, 
+     {torrent_manager, start_link, [Hash]},
+     permanent, 10000, worker, [torrent_manager]},
+    case supervisor:start_child(?MODULE, Manager) of
+    {ok, _} -> ok;
+    {ok, _, _} -> ok;
+    Else -> Else
+    end.
+
+%% @hidden
+-spec init(any()) -> {ok, {{atom(), integer(), integer()}, [child()]}}.
+init(Hashes) ->
+    Managers = lists:map(fun (Hash) ->
+    {{torrent_manager, Hash}, {torrent_manager, start_link, [Hash]},
+        permanent, 10000, worker, [torrent_manager]} end, Hashes),
+    {ok, {{one_for_one, 10, 1}, Managers}}.

@@ -25,13 +25,58 @@
 %%% ----------------------------------------------------------------------------
 
 %%% @author Tamas Nagy <tamas@erlang-consulting.com>
-%%% @doc This is the specification for the torrenterl application.
+%%% @doc Module implementing the database layer of torrenterl. 
+%%% It is thin layer on top of mnesia for now, but it makes db migration
+%%% possible/easy if it proves to be inadequate.
 %%% @end
-{application, torrenterl,
-    [{description, "Erlang Bittorrent Client"},
-        {vsn, "@VSN@"},
-        {modules, [@MODULES@]},
-        {mod, {torrenterl, []}},
-        {applications, [kernel, stdlib, mnesia, ssl, crypto, lhttpc]}
- ]}.
+-module(torrent_db).
+
+-export([create_db/0, create_table/1, ensure_loaded/1, list_torrents/0]).
+-export([write/1, read/2]).
+
+-include("torrenterl_types.hrl").
+
+-spec create_db() -> ok.
+create_db() ->
+    ok = mnesia:create_schema([node()]),
+    ok = mnesia:start(),
+    ok.
+
+-spec create_table(atom()) -> ok.
+create_table(Table) ->
+    case Table of
+    torrent ->
+        {atomic, ok} = mnesia:create_table(torrent, 
+            [{disc_copies, [node()]},
+             {attributes, record_info(fields, torrent)}]);
+    torrent_stats ->
+        {atomic, ok} = mnesia:create_table(torrent_stats, 
+            [{disc_copies, [node()]},
+             {attributes, record_info(fields, torrent_stats)}]);
+    torrent_config ->
+        {atomic, ok} = mnesia:create_table(torrent_config, 
+            [{disc_copies, [node()]},
+             {attributes, record_info(fields, torrent_config)}])
+    end,
+    ok.
+
+-spec ensure_loaded(list(atom())) -> ok.
+ensure_loaded(Tables) ->
+    ok = mnesia:wait_for_tables(Tables, infinity),
+    ok.
+
+-spec list_torrents() -> list().
+list_torrents() ->
+    mnesia:dirty_all_keys(torrent).
+
+-spec write(record()) -> ok.
+write(Record) ->
+    {atomic, ok} = mnesia:transaction(fun () -> mnesia:write(Record) end),
+    ok.
+
+-spec read(atom(), term()) -> ok.
+read(Table, Key) ->
+    {atomic, [Record]} = 
+     mnesia:transaction(fun () -> mnesia:read(Table, Key) end),
+    Record.
 

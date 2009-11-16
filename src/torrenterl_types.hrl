@@ -36,5 +36,33 @@
 
 -type data() :: erdict() | list() | integer() | erstring().
 
+-type hash() :: binary().
 
+-record(torrent, {
+      infohash
+    , announce
+    , piecelength
+    , hashlist
+    , lastpiece
+    , nbofpieces
+    , private= 0
+    , type
+    , name
+    , length
+    , peerid= torrenterl:gen_peer_id()
+    , trackerid
+    }).
+
+-record(torrent_stats,{
+      infohash
+    , uploaded= 0
+    , downloaded= 0 
+    , left
+    , state= start
+    }).
+
+-record(torrent_config,{
+      key
+    , value
+    }).
 
