@@ -32,6 +32,6 @@
         {vsn, "@VSN@"},
         {modules, [@MODULES@]},
         {mod, {torrenterl, []}},
-        {applications, [kernel, stdlib, mnesia, ssl, crypto, lhttpc]}
+        {applications, [kernel, stdlib, sasl, mnesia, ssl, crypto, lhttpc]}
  ]}.
 

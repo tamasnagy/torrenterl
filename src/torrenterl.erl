@@ -102,13 +102,23 @@ download(File) ->
 
 -spec verify_torrent(data(), record()) -> record().
 verify_torrent({<<"announce">>, Url}, Torrent) ->
-    Torrent#torrent{announce= binary_to_list(Url)};
+    Scrape = create_scrape_url(Url),
+    Torrent#torrent{announce= binary_to_list(Url), scrape= Scrape};
 verify_torrent({<<"info">>, FileInfo}, Torrent) ->
     InfoHash = crypto:sha(bencode:encode(FileInfo)),
     lists:foldl(fun verify_torrent_info/2, 
      Torrent#torrent{infohash= InfoHash}, FileInfo);
 verify_torrent(_Else, Torrent) ->
     Torrent.
+
+-spec create_scrape_url(binary()) -> string().
+create_scrape_url(Url) ->
+    List = re:split(Url, "(/)", [{return, list}]),
+    [Announce | Rest] = lists:reverse(List),
+    case re:replace(Announce, "^announce", "scrape", [{return, list}]) of
+    Announce -> undefined;
+    Scrape -> lists:flatten(lists:reverse([Scrape | Rest]))
+    end.
 
 -spec verify_torrent_info(data(), record()) -> record().
 verify_torrent_info({<<"piece length">>, PLength}, 

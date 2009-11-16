@@ -50,7 +50,8 @@ start_link() ->
     io:format("Loading torrent information...", []),
     torrent_db:ensure_loaded([torrent, torrent_stats, torrent_config]),
     io:format("Done.~n", []),
-    supervisor:start_link(?MODULE, torrent_db:list_torrents()).
+    supervisor:start_link({local, ?MODULE}, 
+     ?MODULE, torrent_db:list_torrents()).
 
 %%TODO: return type
 -spec start_torrent_manager(binary()) -> any().

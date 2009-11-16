@@ -41,6 +41,7 @@
 -record(torrent, {
       infohash
     , announce
+    , scrape
     , piecelength
     , hashlist
     , lastpiece
